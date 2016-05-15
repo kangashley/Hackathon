@@ -1,55 +1,50 @@
 import datetime
+import json
+import pymongo
+from pymongo import MongoClient
 from flask import Flask, jsonify, request
+from bson import json_util
+
 app = Flask(__name__)
 
+client = MongoClient('localhost',27017)
+db = client.users
 
-users = {'user1': [
-            {
-                'id': 1,
-                'title': u'help an elderly person cross the street',
-                'description': u'hold their hand and guide them',
-                'create_date': u'2016-11-4',
-                'elapsed_time': 5,
-                'completed': True
-            },
-            {
-                'id': 2,
-                'title': u'deliver groceries for an impoverished family',
-                'description': u'go to the grocery store, buy groceries, deliver them',
-                'create_date': u'2016-11-8',
-                'elapsed_time': 60,
-                'completed': True
-            }
-    ],
-    'user2': [
-            {
-                'id': 1,
-                'title': u'help an elderly person cross the street',
-                'description': u'hold their hand and guide them',
-                'create_date': u'2016-11-4',
-                'elapsed_time': 5,
-                'completed': True
-            },
-            {
-                'id': 2,
-                'title': u'deliver groceries for an impoverished family',
-                'description': u'go to the grocery store, buy groceries, deliver them',
-                'create_date': u'2016-11-8',
-                'elapsed_time': 60,
-                'completed': True
-            }
-    ]
-}
+def toJson(data):
+    return json.dumps(data, default=json_util.default)
+users = db.users
+
+def add_act_to_db(act):
+    user_id = users.insert_one(act).inserted_id
+
+def open_json():
+    with open("users.json") as json_file:
+        json_data = json.load(json_file)
+    return json_data
+
 
 
 ##get all users
 @app.route('/charity/api/users', methods=['GET'])
 def get_users():
-    return jsonify({"users": users})
+    loaded = open_json()
+
+    users = db.users
+    user_id = users.insert(loaded).inserted_id
+    results = []
+    for user in db.users.find():
+        results.append(user)
+    # json_results = []
+    # for result in results:
+    #     json_results.append(results)
+    return toJson(results)
 
 ##get all acts for a given user
 @app.route('/charity/api/users/<string:user_id>/acts', methods=['GET'])
 def get_acts_for_user(user_id):
+
+    open_json()
+
     return jsonify({'acts': users[user_id]})
 
 ##add new act to user's list
@@ -59,7 +54,6 @@ def post_act(user_id):
     # validate_new_post(request.json)
 
     act = {
-        'id': len(users[user_id])+1,
         'title': request.json['title'],
         'description': request.json['description'],
         'create_date': "2016-5-3", ##datetime.date.today(),
@@ -67,8 +61,13 @@ def post_act(user_id):
         'completed': True
     }
 
-    users[user_id].append(act)
+    users = db.users
+    user_id = users.insert(act).inserted_id
+
+
     return jsonify({'act': act}), 201
+
+
 
 ##add new user
 @app.route('/charity/api/users', methods=['POST'])
@@ -76,16 +75,9 @@ def post_user():
 
     # validate_new_post(request.json)
 
-    user = {
-        'id': len(users[user_id])+1,
-        'name': request.json['name'],
-        'description': request.json['description'],
-        'create_date': "2016-5-3", ##datetime.date.today(),
-        'completed': True
-    }
 
-    users.append(user)
-    return jsonify({'user': user}), 201
+    users[request.json['username']] = []
+    return jsonify(), 201
 
 
 def validate_new_post(json):
