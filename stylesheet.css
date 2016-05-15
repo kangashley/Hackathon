@@ -1,0 +1,37 @@
+
+html, body {
+/*	width: 960px;*/
+	margin: auto;
+	background-color: #C390D4;
+	
+}  
+
+.forgotpassword {
+	display: inline-block;
+
+}
+
+/*
+.marketingandsignin {
+width: 960px;
+}*/
+
+.checkbox {
+	text-align: left;
+}
+
+/*#charityfitnessarea {
+	margin: 0px 0px 0px 500px; 
+	/* margin:0 500px; */
+}
+
+
+center-block
+
+.bottomborder {
+	border-bottom: black;
+}
+
+.sectionheading {
+	text-align: center;
+}
